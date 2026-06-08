@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>心意蛋糕工坊 · 引导语优化版</title>
+    <title>心意蛋糕工坊 · 模型加载提示</title>
     <style>
         * {
             margin: 0;
@@ -377,6 +377,35 @@
             0% { text-shadow: 0 0 2px #ffaa00; }
             100% { text-shadow: 0 0 12px #ff6600; }
         }
+        
+        /* 模型加载提示 */
+        .loading-hint {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            color: #ffefcf;
+            font-family: 'Kalam', cursive;
+            font-size: 1.4rem;
+            padding: 16px 32px;
+            border-radius: 80px;
+            border: 2px solid #ffd966;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            z-index: 9999;
+            pointer-events: none;
+            white-space: nowrap;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px #ffaa33;
+        }
+        @media (max-width: 600px) {
+            .loading-hint {
+                font-size: 1rem;
+                padding: 12px 24px;
+                white-space: nowrap;
+            }
+        }
     </style>
 </head>
 <body>
@@ -475,6 +504,9 @@
     <!-- 看简介按钮 -->
     <button id="viewIntroBtn" class="view-intro-btn" style="display: none;">📖 看简介</button>
 
+    <!-- 模型加载提示 -->
+    <div id="modelLoadingHint" class="loading-hint">🎂 模型加载中，请稍后...</div>
+
     <script type="importmap">
         {
             "imports": {
@@ -513,6 +545,7 @@
         const envColorPicker = document.getElementById('envColorPicker');
         const candleLightScreen = document.getElementById('candleLightScreen');
         const collapsePanelBtn = document.getElementById('collapsePanelBtn');
+        const modelLoadingHint = document.getElementById('modelLoadingHint');
         
         // 全局变量
         let currentMakerImageBase64 = null;
@@ -760,6 +793,8 @@
         };
         
         const loader = new GLTFLoader();
+        // 显示加载提示
+        if (modelLoadingHint) modelLoadingHint.style.display = 'flex';
         loader.load('model.glb', 
             (gltf) => {
                 modelGroup = gltf.scene;
@@ -812,11 +847,20 @@
                 if (currentPalette) applyColorsToAllMaterials(currentPalette);
                 
                 document.getElementById('info').innerHTML = '✅ 模型加载成功，可切换手动模式选择部件上色';
+                
+                // 模型加载完成，隐藏加载提示
+                if (modelLoadingHint) {
+                    modelLoadingHint.style.display = 'none';
+                }
             },
             undefined,
             (error) => {
                 console.error(error);
                 document.getElementById('info').innerHTML = '❌ 模型加载失败，请确保 model.glb 存在并使用本地服务器';
+                // 加载失败也隐藏提示，避免一直显示
+                if (modelLoadingHint) {
+                    modelLoadingHint.style.display = 'none';
+                }
             }
         );
         
