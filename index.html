@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>心意蛋糕工坊 · 长按点亮蜡烛</title>
+    <title>心意蛋糕工坊 · 可折叠控制面板</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,6 @@
         }
         @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Patrick+Hand&display=swap');
         
-        /* 全屏面板 */
         .fullscreen-panel {
             position: fixed;
             top: 0; left: 0;
@@ -78,7 +77,6 @@
         }
         .hidden { visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }
         
-        /* 烘焙动画界面 */
         .kitchen-scene {
             background: #fff9ef;
             border: 4px solid #2d2d2d;
@@ -164,7 +162,6 @@
         }
         .drop-animation { animation: dropIn 0.3s ease-out forwards; }
         
-        /* 品鉴页 */
         .tasting-fullscreen { background: rgba(255, 250, 240, 0.96); backdrop-filter: blur(8px); }
         .tasting-card-full {
             max-width: 650px;
@@ -218,7 +215,7 @@
             z-index: 20;
         }
         
-        /* 3D控制面板 */
+        /* 可折叠面板样式 */
         .ui-panel {
             position: absolute;
             top: 20px;
@@ -227,17 +224,74 @@
             background: rgba(253, 251, 247, 0.95);
             backdrop-filter: blur(4px);
             border-radius: 188px 12px 175px 12px / 12px 198px 12px 185px;
-            padding: 16px 20px;
-            max-width: 380px;
-            width: calc(100% - 40px);
             border: 3px solid #2d2d2d;
             color: #2d2d2d;
             pointer-events: auto;
-            max-height: 80vh;
-            overflow-y: auto;
             font-family: 'Patrick Hand', cursive;
             box-shadow: 8px 8px 0px 0px rgba(45,45,45,0.2);
+            transition: all 0.3s ease;
+            overflow: hidden;
         }
+        .ui-panel.expanded {
+            width: 380px;
+            max-width: calc(100% - 40px);
+            padding: 16px 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .ui-panel.collapsed {
+            width: auto;
+            padding: 8px;
+            background: rgba(253, 251, 247, 0.98);
+            cursor: pointer;
+            border-radius: 60px;
+        }
+        .ui-panel.collapsed .panel-content {
+            display: none;
+        }
+        .panel-header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .collapse-btn {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            font-family: 'Kalam', cursive;
+            font-weight: bold;
+            color: #2d2d2d;
+            padding: 4px 8px;
+            border-radius: 40px;
+            transition: 0.1s;
+        }
+        .collapse-btn:hover {
+            background: rgba(0,0,0,0.05);
+        }
+        .collapsed .collapse-btn {
+            margin: 0;
+            font-size: 1.6rem;
+        }
+        /* 折叠后显示一个简短的提示 */
+        .collapsed .panel-header {
+            margin-bottom: 0;
+        }
+        .collapsed .collapse-btn::before {
+            content: "⚙️";
+            margin-right: 4px;
+        }
+        .collapsed .collapse-btn span {
+            display: none;
+        }
+        .expanded .collapse-btn span {
+            display: inline;
+        }
+        .expanded .collapse-btn::before {
+            content: "🔽 ";
+        }
+        
         .mode-switch { display: flex; gap: 10px; margin: 12px 0; }
         .mode-btn {
             background: #fff;
@@ -276,7 +330,6 @@
         .env-color-selector label { font-size: 0.9rem; }
         .env-color-selector input { width: 60px; height: 40px; border: 2px solid #2d2d2d; border-radius: 20px; cursor: pointer; background: white; }
         
-        /* 新增：长按点亮蜡烛全黑面板 */
         .dark-fullscreen {
             position: fixed;
             top: 0;
@@ -342,8 +395,11 @@
         </div>
     </div>
 
-    <!-- 蛋糕制作主界面（3D + 控制面板） -->
-    <div id="cakeMakerPanel" class="ui-panel" style="display: none;">
+    <!-- 蛋糕制作主界面（3D + 控制面板） - 可折叠 -->
+    <div id="cakeMakerPanel" class="ui-panel expanded">
+        <div class="panel-header">
+            <button id="collapsePanelBtn" class="collapse-btn"><span>折叠面板</span></button>
+        </div>
         <div class="panel-content">
             <div><label>🎨 提取的色板 (自动模式)</label><div id="colorPalette" class="color-swatches"></div></div>
             <div class="mode-switch">
@@ -357,7 +413,6 @@
                 </div>
                 <div class="pick-tip">✏️ 点击照片吸色 → 改变选中部件颜色</div>
             </div>
-            <!-- 环境色选择器 -->
             <div class="env-color-selector">
                 <label>✨ 蛋糕周围环境色：</label>
                 <input type="color" id="envColorPicker" value="#ffaa88">
@@ -448,6 +503,7 @@
         const ovenBtn = document.getElementById('ovenBtn');
         const envColorPicker = document.getElementById('envColorPicker');
         const candleLightScreen = document.getElementById('candleLightScreen');
+        const collapsePanelBtn = document.getElementById('collapsePanelBtn');
         
         // 全局变量
         let currentMakerImageBase64 = null;
@@ -457,6 +513,32 @@
         let giftMessage = "";
         let currentStep = 1;
         let currentFullDescHTML = "";
+        
+        // 面板折叠逻辑
+        let isPanelCollapsed = false;
+        function togglePanel() {
+            if (isPanelCollapsed) {
+                cakeMakerPanel.classList.remove('collapsed');
+                cakeMakerPanel.classList.add('expanded');
+                collapsePanelBtn.innerHTML = '<span>折叠面板</span>';
+                isPanelCollapsed = false;
+            } else {
+                cakeMakerPanel.classList.remove('expanded');
+                cakeMakerPanel.classList.add('collapsed');
+                collapsePanelBtn.innerHTML = '<span>展开</span>';
+                isPanelCollapsed = true;
+            }
+        }
+        collapsePanelBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePanel();
+        });
+        // 点击折叠后的面板也可以展开
+        cakeMakerPanel.addEventListener('click', (e) => {
+            if (isPanelCollapsed && e.target === cakeMakerPanel || e.target.classList.contains('collapse-btn')) {
+                togglePanel();
+            }
+        });
         
         // ---------- Three.js 场景 ----------
         const scene = new THREE.Scene();
@@ -531,11 +613,7 @@
         shadowPlane.receiveShadow = true;
         scene.add(shadowPlane);
         
-        const gridHelper = new THREE.GridHelper(6, 20, 0x88aaff, 0x335588);
-        gridHelper.position.y = -0.48;
-        scene.add(gridHelper);
-        
-        // ---------- 星星粒子系统（旋转的五角星精灵） ----------
+        // ---------- 星星粒子系统 ----------
         let starGroup = new THREE.Group();
         scene.add(starGroup);
         let currentStars = [];
@@ -587,7 +665,6 @@
             }
         }
         
-        // ---------- 原有环绕粒子系统（蛋糕周围流动） ----------
         const particleCount = 800;
         const particlesGeometry = new THREE.BufferGeometry();
         const particlePositions = new Float32Array(particleCount * 3);
@@ -607,7 +684,6 @@
         const particleSystem = new THREE.Points(particlesGeometry, particleMaterial);
         scene.add(particleSystem);
         
-        // ========== 背景发光小点粒子 ==========
         const bgParticleCount = 2000;
         const bgGeometry = new THREE.BufferGeometry();
         const bgPositions = new Float32Array(bgParticleCount * 3);
@@ -645,7 +721,6 @@
         }
         animateBgParticles();
         
-        // 照片背景平面
         let photoPlane = null;
         function setPhotoBackground(base64) {
             const img = new Image();
@@ -780,7 +855,6 @@
             });
         }
         
-        // ---------- 颜色提取 ----------
         let colorThief = new ColorThief();
         
         async function getRichColorPalette(imgElement) {
@@ -897,7 +971,7 @@
             }
         }
         
-        // ---------- 烘焙问答 ----------
+        // 烘焙问答
         function getTextureDesc(answer) {
             if (answer === 'bright') {
                 return `这块蛋糕的质地绵密得像被阳光晒暖的云朵，入口还带着丝丝温度。勺子切下去的瞬间几乎没有阻力，送进嘴里立刻融化，柔软地铺满整个上颚与舌面，像拥抱，也像一个慵懒午后不愿醒来的梦。每一口都扎实又轻盈，仿佛能把人托起来。`;
@@ -958,6 +1032,7 @@
             span.classList.add('drop-animation');
             ingredientsContainer.appendChild(span);
         }
+        
         function renderCurrentQuestion() {
             if (currentStep === 1) {
                 questionContainer.innerHTML = `
@@ -1037,12 +1112,10 @@
             tastingFullscreen.classList.remove('hidden');
         }
         
-        // 修改放入烤箱逻辑：先显示全黑长按界面
         function handleOvenClick() {
             if (ovenBtn.classList.contains('active') && q1Answer && q2Answer && q3Answer) {
                 if (importedGift) applyGiftToView(importedGift);
                 bakingScreen.classList.add('hidden');
-                // 显示长按点亮蜡烛界面
                 candleLightScreen.classList.remove('hidden');
             } else {
                 alert("请先完成所有三个问题！");
@@ -1051,14 +1124,12 @@
         
         ovenBtn.onclick = handleOvenClick;
         
-        // 长按点亮蜡烛逻辑
         let pressTimer = null;
-        const longPressDuration = 800; // 毫秒
+        const longPressDuration = 800;
         
         function onPressStart(e) {
             e.preventDefault();
             pressTimer = setTimeout(() => {
-                // 长按触发：隐藏黑色面板，显示品鉴界面
                 candleLightScreen.classList.add('hidden');
                 showTastingFullscreen();
                 pressTimer = null;
@@ -1072,12 +1143,10 @@
             }
         }
         
-        // 监听鼠标和触摸事件
         candleLightScreen.addEventListener('mousedown', onPressStart);
         candleLightScreen.addEventListener('mouseup', onPressEnd);
         candleLightScreen.addEventListener('touchstart', onPressStart);
         candleLightScreen.addEventListener('touchend', onPressEnd);
-        // 防止在长按过程中离开元素
         candleLightScreen.addEventListener('mouseleave', onPressEnd);
         
         closeTastingBtn.onclick = () => {
@@ -1091,7 +1160,6 @@
             } else showTastingFullscreen();
         };
         
-        // 收到礼物流程
         let receivedGiftFile = null;
         receiveGiftInput.onchange = (e) => {
             receivedGiftFile = e.target.files[0];
@@ -1115,7 +1183,6 @@
             } catch(err) { alert("文件无效"); }
         };
         
-        // 送出礼物流程
         document.getElementById('sendBtn').onclick = () => {
             choiceScreen.classList.add('hidden');
             sendUploadScreen.classList.remove('hidden');
@@ -1162,7 +1229,6 @@
         };
         exportGiftBtn.onclick = exportGift;
         
-        // 手动模式UI
         let isCustomMode = false;
         let pickActive = false;
         let currentPickHandler = null;
@@ -1245,7 +1311,7 @@
             if (partSelect && partSelect.value) currentSelectedPart = partSelect.value;
         }
         
-        // ========== 自动上下轻微拉动视角 ==========
+        // 自动上下浮动
         let userInteracting = false;
         let autoFloatTimer = null;
         let autoFloatEnabled = true;
