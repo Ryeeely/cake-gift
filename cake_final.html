@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>心意蛋糕工坊 · 长按点亮蜡烛</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Patrick Hand', 'Comic Neue', cursive;
+            overflow: hidden;
+            background-color: #fdfbf7;
+            background-image: radial-gradient(#e5e0d8 1.2px, transparent 1.2px);
+            background-size: 28px 28px;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Patrick+Hand&display=swap');
+        
+        /* 全屏面板 */
+        .fullscreen-panel {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #fdfbf7;
+            background-image: radial-gradient(#e5e0d8 1.2px, transparent 1.2px);
+            background-size: 28px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        .card {
+            background: #ffffff;
+            border: 3px solid #2d2d2d;
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            padding: 32px 28px;
+            max-width: 500px;
+            width: 85%;
+            box-shadow: 8px 8px 0px 0px #2d2d2d;
+            text-align: center;
+            transform: rotate(-0.5deg);
+        }
+        .card h2 { font-family: 'Kalam', cursive; font-size: 2rem; }
+        .card input, .card button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 45px 8px 38px 8px / 8px 48px 8px 42px;
+            border: 2px solid #2d2d2d;
+            margin-bottom: 16px;
+            font-size: 1rem;
+            background: white;
+            font-family: 'Patrick Hand', cursive;
+        }
+        .card button {
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px 0px #2d2d2d;
+        }
+        .card button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px 0px #2d2d2d !important;
+        }
+        .choice-buttons { display: flex; gap: 24px; justify-content: center; margin-top: 20px; }
+        .choice-btn {
+            background: #ffffff;
+            border: 3px solid #2d2d2d;
+            padding: 14px 32px;
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Kalam', cursive;
+            box-shadow: 5px 5px 0px 0px #2d2d2d;
+        }
+        .hidden { visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }
+        
+        /* 烘焙动画界面 */
+        .kitchen-scene {
+            background: #fff9ef;
+            border: 4px solid #2d2d2d;
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            padding: 20px;
+            max-width: 650px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 12px 12px 0px 0px #2d2d2d;
+        }
+        .photo-preview-small {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 45px 8px 38px 8px / 8px 48px 8px 42px;
+            border: 3px solid #2d2d2d;
+            margin-bottom: 16px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .bowl-area {
+            background: #f0e6d2;
+            border-radius: 188px 12px 175px 12px / 12px 198px 12px 185px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .bowl {
+            width: 200px;
+            height: 120px;
+            background: #e0c8a0;
+            border-radius: 0 0 100px 100px;
+            border: 3px solid #2d2d2d;
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        .ingredients {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            font-size: 28px;
+        }
+        .question-box {
+            background: #fff8e7;
+            border: 2px dashed #2d2d2d;
+            border-radius: 188px 12px 175px 12px / 12px 198px 12px 185px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .option-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .option-btn {
+            background: #fff;
+            border: 2px solid #2d2d2d;
+            border-radius: 88px 8px 78px 8px / 8px 88px 8px 78px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: 'Patrick Hand', cursive;
+        }
+        .option-btn.selected { background: #ff4d4d; color: white; }
+        .oven {
+            background: #c0a080;
+            border: 3px solid #2d2d2d;
+            border-radius: 45px 8px 38px 8px / 8px 48px 8px 42px;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            font-family: 'Kalam', cursive;
+            font-weight: bold;
+            box-shadow: 5px 5px 0px 0px #2d2d2d;
+            opacity: 0.6;
+            pointer-events: none;
+            margin-top: 20px;
+        }
+        .oven.active { opacity: 1; pointer-events: auto; }
+        @keyframes dropIn {
+            0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .drop-animation { animation: dropIn 0.3s ease-out forwards; }
+        
+        /* 品鉴页 */
+        .tasting-fullscreen { background: rgba(255, 250, 240, 0.96); backdrop-filter: blur(8px); }
+        .tasting-card-full {
+            max-width: 650px;
+            width: 90%;
+            background: #ffffff;
+            border: 4px solid #2d2d2d;
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            padding: 40px 36px;
+            position: relative;
+        }
+        .close-tasting {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+        }
+        .feeling-tag {
+            background: #fff0c8;
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 60px;
+            margin-bottom: 24px;
+            border: 2px solid #2d2d2d;
+        }
+        .desc-block { text-align: left; margin: 24px 0; line-height: 1.5; }
+        .desc-block p { margin: 12px 0; }
+        .message-large {
+            font-size: 1.5rem;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #e0c8a0;
+            font-family: 'Kalam', cursive;
+            color: #b45f1b;
+            text-align: center;
+        }
+        .view-intro-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #ffffff;
+            border: 3px solid #2d2d2d;
+            border-radius: 88px 8px 78px 8px / 8px 88px 8px 78px;
+            padding: 10px 20px;
+            font-family: 'Kalam', cursive;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 6px 6px 0px 0px #2d2d2d;
+            z-index: 20;
+        }
+        
+        /* 3D控制面板 */
+        .ui-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(253, 251, 247, 0.95);
+            backdrop-filter: blur(4px);
+            border-radius: 188px 12px 175px 12px / 12px 198px 12px 185px;
+            padding: 16px 20px;
+            max-width: 380px;
+            width: calc(100% - 40px);
+            border: 3px solid #2d2d2d;
+            color: #2d2d2d;
+            pointer-events: auto;
+            max-height: 80vh;
+            overflow-y: auto;
+            font-family: 'Patrick Hand', cursive;
+            box-shadow: 8px 8px 0px 0px rgba(45,45,45,0.2);
+        }
+        .mode-switch { display: flex; gap: 10px; margin: 12px 0; }
+        .mode-btn {
+            background: #fff;
+            border: 2px solid #2d2d2d;
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 88px 8px 78px 8px / 8px 88px 8px 78px;
+        }
+        .mode-btn.active { background: #ff4d4d; color: white; }
+        .part-selector { margin: 12px 0; }
+        .part-selector select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 40px;
+            border: 2px solid #2d2d2d;
+            background: white;
+            font-family: 'Patrick Hand', cursive;
+            font-size: 1rem;
+        }
+        .color-swatches { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+        .color-chip { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #2d2d2d; }
+        .photo-preview {
+            width: 100%;
+            max-height: 120px;
+            object-fit: cover;
+            border-radius: 45px 8px 38px 8px / 8px 48px 8px 42px;
+            margin-top: 8px;
+            border: 2px solid #2d2d2d;
+            cursor: crosshair;
+        }
+        .pick-tip { background: #e5e0d8; padding: 5px; border-radius: 20px; margin-top: 8px; text-align: center; }
+        .gift-buttons { display: flex; gap: 10px; margin-top: 12px; }
+        .env-color-selector { margin: 12px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .env-color-selector label { font-size: 0.9rem; }
+        .env-color-selector input { width: 60px; height: 40px; border: 2px solid #2d2d2d; border-radius: 20px; cursor: pointer; background: white; }
+        
+        /* 新增：长按点亮蜡烛全黑面板 */
+        .dark-fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            background-image: radial-gradient(circle at 30% 40%, rgba(255,215,0,0.12) 0%, #000000 90%);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: #ffd966;
+            font-family: 'Kalam', cursive;
+            cursor: pointer;
+            transition: opacity 0.5s ease;
+            text-align: center;
+        }
+        .candle-instruction {
+            background: rgba(0,0,0,0.7);
+            padding: 20px 40px;
+            border-radius: 60px;
+            border: 2px solid #ffd966;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            backdrop-filter: blur(4px);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; transform: scale(1);}
+            100% { opacity: 1; transform: scale(1.02);}
+        }
+        .candle-instruction span {
+            display: inline-block;
+            animation: flicker 0.3s infinite alternate;
+        }
+        @keyframes flicker {
+            0% { text-shadow: 0 0 2px #ffaa00; }
+            100% { text-shadow: 0 0 12px #ff6600; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 初始选择界面 -->
+    <div id="choiceScreen" class="fullscreen-panel">
+        <div class="card">
+            <h1 style="font-size: 2.2rem;">🎂 心意蛋糕工坊 🎂</h1>
+            <div class="choice-buttons">
+                <button class="choice-btn" id="sendBtn">🎁 送出礼物</button>
+                <button class="choice-btn" id="receiveBtn">📬 收到礼物</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 送出礼物：上传照片 -->
+    <div id="sendUploadScreen" class="fullscreen-panel hidden">
+        <div class="card">
+            <h2>📸 上传一张照片</h2>
+            <p style="margin-bottom: 16px;">选择照片，我们将提取颜色装饰你的蛋糕</p>
+            <input type="file" id="sendPhotoInput" accept="image/jpeg,image/png,image/jpg">
+            <button id="sendNextBtn" disabled>✏️ 下一步：制作蛋糕 →</button>
+        </div>
+    </div>
+
+    <!-- 蛋糕制作主界面（3D + 控制面板） -->
+    <div id="cakeMakerPanel" class="ui-panel" style="display: none;">
+        <div class="panel-content">
+            <div><label>🎨 提取的色板 (自动模式)</label><div id="colorPalette" class="color-swatches"></div></div>
+            <div class="mode-switch">
+                <button id="autoModeBtn" class="mode-btn active">✨ 自动装饰</button>
+                <button id="customModeBtn" class="mode-btn">🎨 亲手制作(吸色)</button>
+            </div>
+            <div id="customTool" style="display:none;">
+                <div class="part-selector">
+                    <label>🎨 选择部件：</label>
+                    <select id="partSelect"></select>
+                </div>
+                <div class="pick-tip">✏️ 点击照片吸色 → 改变选中部件颜色</div>
+            </div>
+            <!-- 环境色选择器 -->
+            <div class="env-color-selector">
+                <label>✨ 蛋糕周围环境色：</label>
+                <input type="color" id="envColorPicker" value="#ffaa88">
+            </div>
+            <div><label>💌 寄语</label><textarea id="makerMessage" rows="2" placeholder="写下你的祝福..." style="width:100%;"></textarea></div>
+            <div class="gift-buttons"><button id="exportGiftBtn">💾 导出礼物文件</button></div>
+        </div>
+    </div>
+
+    <!-- 收到礼物：导入文件 -->
+    <div id="receiveImportScreen" class="fullscreen-panel hidden">
+        <div class="card">
+            <h2>📂 导入礼物文件</h2>
+            <input type="file" id="receiveGiftInput" accept=".json">
+            <button id="receiveNextBtn" disabled>🍰 开始制作蛋糕 →</button>
+        </div>
+    </div>
+
+    <!-- 烘焙动画界面 -->
+    <div id="bakingScreen" class="fullscreen-panel hidden">
+        <div class="kitchen-scene">
+            <h2 style="font-size: 1.8rem;">🧑‍🍳 亲手制作蛋糕</h2>
+            <img id="bakingPhoto" class="photo-preview-small" style="display: none;">
+            <div class="bowl-area">
+                <div class="bowl">
+                    <div class="ingredients" id="ingredientsContainer"></div>
+                </div>
+                <p>🥣 搅拌碗</p>
+            </div>
+            <div id="questionContainer"></div>
+            <div id="ovenBtn" class="oven">🔥 放入烤箱 🔥</div>
+        </div>
+    </div>
+
+    <!-- 长按点亮蜡烛全黑过渡界面 -->
+    <div id="candleLightScreen" class="dark-fullscreen hidden">
+        <div class="candle-instruction">
+            🕯️ 长按点亮蜡烛 🕯️
+        </div>
+        <div style="margin-top: 30px; font-size: 1rem; opacity: 0.8;">✨ 为蛋糕注入祝福 ✨</div>
+    </div>
+
+    <!-- 全屏品鉴页 -->
+    <div id="tastingFullscreen" class="fullscreen-panel hidden tasting-fullscreen">
+        <div class="tasting-card-full">
+            <button class="close-tasting" id="closeTastingBtn">✕</button>
+            <div id="tastingDynamicContent"></div>
+        </div>
+    </div>
+
+    <!-- 看简介按钮 -->
+    <button id="viewIntroBtn" class="view-intro-btn" style="display: none;">📖 看简介</button>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/colorthief@2.3.2/dist/color-thief.min.js"></script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // ---------- DOM 元素 ----------
+        const choiceScreen = document.getElementById('choiceScreen');
+        const sendUploadScreen = document.getElementById('sendUploadScreen');
+        const cakeMakerPanel = document.getElementById('cakeMakerPanel');
+        const receiveImportScreen = document.getElementById('receiveImportScreen');
+        const bakingScreen = document.getElementById('bakingScreen');
+        const tastingFullscreen = document.getElementById('tastingFullscreen');
+        const tastingDynamicContent = document.getElementById('tastingDynamicContent');
+        const closeTastingBtn = document.getElementById('closeTastingBtn');
+        const viewIntroBtn = document.getElementById('viewIntroBtn');
+        const sendPhotoInput = document.getElementById('sendPhotoInput');
+        const sendNextBtn = document.getElementById('sendNextBtn');
+        const exportGiftBtn = document.getElementById('exportGiftBtn');
+        const makerMessage = document.getElementById('makerMessage');
+        const receiveGiftInput = document.getElementById('receiveGiftInput');
+        const receiveNextBtn = document.getElementById('receiveNextBtn');
+        const bakingPhoto = document.getElementById('bakingPhoto');
+        const questionContainer = document.getElementById('questionContainer');
+        const ingredientsContainer = document.getElementById('ingredientsContainer');
+        const ovenBtn = document.getElementById('ovenBtn');
+        const envColorPicker = document.getElementById('envColorPicker');
+        const candleLightScreen = document.getElementById('candleLightScreen');
+        
+        // 全局变量
+        let currentMakerImageBase64 = null;
+        let currentPalette = null;
+        let importedGift = null;
+        let q1Answer = null, q2Answer = null, q3Answer = null;
+        let giftMessage = "";
+        let currentStep = 1;
+        let currentFullDescHTML = "";
+        
+        // ---------- Three.js 场景 ----------
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a1030);
+        scene.fog = new THREE.FogExp2(0x0a1030, 0.008);
+        
+        const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1.8, 3.2);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+        renderer.domElement.style.position = 'absolute';
+        renderer.domElement.style.top = '0';
+        renderer.domElement.style.left = '0';
+        renderer.domElement.style.zIndex = '1';
+        
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.target.set(0, 1.2, 0);
+        
+        // ========== 灯光优化 ==========
+        const ambientLight = new THREE.AmbientLight(0x404060, 0.72);
+        scene.add(ambientLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xfff5e0, 1.1);
+        dirLight.position.set(3, 5, 2);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 8;
+        dirLight.shadow.camera.left = -3;
+        dirLight.shadow.camera.right = 3;
+        dirLight.shadow.camera.top = 3;
+        dirLight.shadow.camera.bottom = -3;
+        scene.add(dirLight);
+        
+        const specLight = new THREE.PointLight(0xffcc99, 0.85);
+        specLight.position.set(2.2, 2.8, 2.5);
+        scene.add(specLight);
+        
+        const leftFillLight = new THREE.PointLight(0xffaa88, 0.7);
+        leftFillLight.position.set(-2.5, 2.0, 1.5);
+        scene.add(leftFillLight);
+        
+        const backLight = new THREE.PointLight(0xffaa66, 0.6);
+        backLight.position.set(-1.5, 2.2, -2.5);
+        scene.add(backLight);
+        
+        const rimLight = new THREE.PointLight(0xaaccff, 0.65);
+        rimLight.position.set(1.8, 1.5, -2.2);
+        scene.add(rimLight);
+        
+        const fillBottom = new THREE.PointLight(0xccaa88, 0.35);
+        fillBottom.position.set(0, -0.8, 0);
+        scene.add(fillBottom);
+        
+        const cakeGlow = new THREE.PointLight(0xffaa88, 0.65);
+        cakeGlow.position.set(0, 1.2, 0);
+        scene.add(cakeGlow);
+        
+        const shadowPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(6, 6),
+            new THREE.ShadowMaterial({ opacity: 0.4, transparent: true, side: THREE.DoubleSide })
+        );
+        shadowPlane.rotation.x = -Math.PI / 2;
+        shadowPlane.position.y = -0.5;
+        shadowPlane.receiveShadow = true;
+        scene.add(shadowPlane);
+        
+        const gridHelper = new THREE.GridHelper(6, 20, 0x88aaff, 0x335588);
+        gridHelper.position.y = -0.48;
+        scene.add(gridHelper);
+        
+        // ---------- 星星粒子系统（旋转的五角星精灵） ----------
+        let starGroup = new THREE.Group();
+        scene.add(starGroup);
+        let currentStars = [];
+        
+        function createStarTexture(colorHex) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 64, 64);
+            const centerX = 32, centerY = 32, outerR = 28, innerR = 12, points = 5;
+            let step = Math.PI / points;
+            let rot = Math.PI / 2 * 3;
+            ctx.beginPath();
+            for (let i = 0; i < points; i++) {
+                const x1 = centerX + Math.cos(rot + i * step * 2) * outerR;
+                const y1 = centerY + Math.sin(rot + i * step * 2) * outerR;
+                const x2 = centerX + Math.cos(rot + (i * step * 2 + step)) * innerR;
+                const y2 = centerY + Math.sin(rot + (i * step * 2 + step)) * innerR;
+                if (i === 0) ctx.moveTo(x1, y1);
+                else ctx.lineTo(x1, y1);
+                ctx.lineTo(x2, y2);
+            }
+            ctx.closePath();
+            ctx.fillStyle = colorHex;
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,200,0.8)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            return new THREE.CanvasTexture(canvas);
+        }
+        
+        function generateStars(colorPoolHexStrings) {
+            while(starGroup.children.length) starGroup.remove(starGroup.children[0]);
+            currentStars = [];
+            for (let i = 0; i < 55; i++) {
+                const randomColor = colorPoolHexStrings[Math.floor(Math.random() * colorPoolHexStrings.length)];
+                const tex = createStarTexture(randomColor);
+                const mat = new THREE.SpriteMaterial({ map: tex, blending: THREE.AdditiveBlending });
+                const sprite = new THREE.Sprite(mat);
+                const r = 1.6 + Math.random() * 2.6;
+                const a = Math.random() * Math.PI * 2;
+                const h = -0.3 + Math.random() * 3.4;
+                sprite.position.set(Math.cos(a)*r, h, Math.sin(a)*r);
+                const s = 0.1 + Math.random() * 0.18;
+                sprite.scale.set(s, s, 1);
+                starGroup.add(sprite);
+                currentStars.push({ sprite, speed: 0.003+Math.random()*0.012, angle: a, radius: r });
+            }
+        }
+        
+        // ---------- 原有环绕粒子系统（蛋糕周围流动） ----------
+        const particleCount = 800;
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            const radius = 1.5 + Math.random() * 1.8;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            const x = Math.sin(phi) * Math.cos(theta) * radius;
+            const z = Math.sin(phi) * Math.sin(theta) * radius;
+            const y = Math.sin(phi) * radius * 0.8 + 1.2;
+            particlePositions[i*3] = x;
+            particlePositions[i*3+1] = y;
+            particlePositions[i*3+2] = z;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        const particleMaterial = new THREE.PointsMaterial({ color: 0xffaa88, size: 0.035, transparent: true, blending: THREE.AdditiveBlending, opacity: 0.6 });
+        const particleSystem = new THREE.Points(particlesGeometry, particleMaterial);
+        scene.add(particleSystem);
+        
+        // ========== 背景发光小点粒子 ==========
+        const bgParticleCount = 2000;
+        const bgGeometry = new THREE.BufferGeometry();
+        const bgPositions = new Float32Array(bgParticleCount * 3);
+        const bgColors = new Float32Array(bgParticleCount * 3);
+        for (let i = 0; i < bgParticleCount; i++) {
+            const x = (Math.random() - 0.5) * 12;
+            const y = Math.random() * 6.5 - 2;
+            const z = (Math.random() - 0.5) * 12 - 2;
+            bgPositions[i*3] = x;
+            bgPositions[i*3+1] = y;
+            bgPositions[i*3+2] = z;
+            const colorChoice = Math.random();
+            let r, g, b;
+            if (colorChoice < 0.33) {
+                r = 0.9 + Math.random()*0.1; g = 0.7 + Math.random()*0.2; b = 0.5 + Math.random()*0.2;
+            } else if (colorChoice < 0.66) {
+                r = 0.6 + Math.random()*0.2; g = 0.7 + Math.random()*0.2; b = 0.9 + Math.random()*0.1;
+            } else {
+                r = 0.9 + Math.random()*0.1; g = 0.5 + Math.random()*0.2; b = 0.8 + Math.random()*0.2;
+            }
+            bgColors[i*3] = r;
+            bgColors[i*3+1] = g;
+            bgColors[i*3+2] = b;
+        }
+        bgGeometry.setAttribute('position', new THREE.BufferAttribute(bgPositions, 3));
+        bgGeometry.setAttribute('color', new THREE.BufferAttribute(bgColors, 3));
+        const bgParticleMaterial = new THREE.PointsMaterial({ size: 0.045, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, opacity: 0.7 });
+        const bgParticleSystem = new THREE.Points(bgGeometry, bgParticleMaterial);
+        scene.add(bgParticleSystem);
+        
+        function animateBgParticles() {
+            bgParticleSystem.rotation.y += 0.0005;
+            bgParticleSystem.rotation.x += 0.0003;
+            requestAnimationFrame(animateBgParticles);
+        }
+        animateBgParticles();
+        
+        // 照片背景平面
+        let photoPlane = null;
+        function setPhotoBackground(base64) {
+            const img = new Image();
+            img.onload = () => {
+                if (photoPlane) scene.remove(photoPlane);
+                const texture = new THREE.CanvasTexture(img);
+                const mat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
+                const plane = new THREE.Mesh(new THREE.PlaneGeometry(13.5, 10.2), mat);
+                plane.position.set(0, 2.0, -5.5);
+                scene.add(plane);
+                photoPlane = plane;
+            };
+            img.src = base64;
+        }
+        
+        // ---------- 模型材质管理 ----------
+        let modelGroup = null;
+        let materialMap = new Map();
+        let allMaterials = [];
+        
+        const materialNameMap = {
+            'cream': '奶油',
+            'cake': '蛋糕胚',
+            'bottom': '底座',
+            'sauce': '淋面',
+            'chocolate': '巧克力',
+            'cookie': '饼干',
+            'top': '水果顶'
+        };
+        
+        const loader = new GLTFLoader();
+        loader.load('model.glb', 
+            (gltf) => {
+                modelGroup = gltf.scene;
+                scene.add(modelGroup);
+                modelGroup.position.set(0, 0, 0);
+                
+                modelGroup.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        if (child.material) {
+                            const mats = Array.isArray(child.material) ? child.material : [child.material];
+                            mats.forEach(mat => {
+                                mat.roughness = 0.38;
+                                mat.metalness = 0.45;
+                                mat.emissiveIntensity = 0;
+                            });
+                        }
+                    }
+                });
+                
+                modelGroup.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        let mats = Array.isArray(child.material) ? child.material : [child.material];
+                        mats.forEach(mat => {
+                            let matName = mat.name ? mat.name.trim() : "";
+                            if (matName === "") matName = `材质_${materialMap.size}`;
+                            if (!materialMap.has(matName)) materialMap.set(matName, []);
+                            materialMap.get(matName).push(mat);
+                            allMaterials.push(mat);
+                        });
+                    }
+                });
+                
+                console.log("模型加载成功，检测到的材质：", Array.from(materialMap.keys()));
+                
+                const partSelect = document.getElementById('partSelect');
+                if (partSelect) {
+                    partSelect.innerHTML = '';
+                    for (let name of materialMap.keys()) {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        const displayName = materialNameMap[name] || name;
+                        option.textContent = displayName;
+                        partSelect.appendChild(option);
+                    }
+                    if (materialMap.size > 0) currentSelectedPart = materialMap.keys().next().value;
+                }
+                
+                if (currentPalette) applyColorsToAllMaterials(currentPalette);
+                
+                document.getElementById('info').innerHTML = '✅ 模型加载成功，可切换手动模式选择部件上色';
+            },
+            undefined,
+            (error) => {
+                console.error(error);
+                document.getElementById('info').innerHTML = '❌ 模型加载失败，请确保 model.glb 存在并使用本地服务器';
+            }
+        );
+        
+        const infoDiv = document.createElement('div');
+        infoDiv.id = 'info';
+        infoDiv.style.position = 'absolute';
+        infoDiv.style.bottom = '20px';
+        infoDiv.style.left = '20px';
+        infoDiv.style.backgroundColor = 'rgba(0,0,0,0.6)';
+        infoDiv.style.color = 'white';
+        infoDiv.style.padding = '6px 12px';
+        infoDiv.style.borderRadius = '20px';
+        infoDiv.style.fontSize = '12px';
+        infoDiv.style.pointerEvents = 'none';
+        infoDiv.style.zIndex = '10';
+        infoDiv.innerText = '🔄 正在加载 model.glb ...';
+        document.body.appendChild(infoDiv);
+        
+        function applyColorsToAllMaterials(hexColors) {
+            if (!allMaterials.length) return;
+            allMaterials.forEach((mat, idx) => {
+                if (mat && mat.color) mat.color.setHex(hexColors[idx % hexColors.length]);
+            });
+        }
+        
+        let currentSelectedPart = null;
+        function applyColorToSelectedPart(hexColor) {
+            if (!currentSelectedPart) return;
+            const mats = materialMap.get(currentSelectedPart);
+            if (mats) {
+                mats.forEach(mat => { if (mat && mat.color) mat.color.setHex(hexColor); });
+            }
+        }
+        
+        function updateEnvironmentColor(hexColor) {
+            const colorNum = parseInt(hexColor.slice(1), 16);
+            cakeGlow.color.setHex(colorNum);
+            particleMaterial.color.setHex(colorNum);
+        }
+        
+        if (envColorPicker) {
+            envColorPicker.addEventListener('input', (e) => {
+                updateEnvironmentColor(e.target.value);
+            });
+        }
+        
+        // ---------- 颜色提取 ----------
+        let colorThief = new ColorThief();
+        
+        async function getRichColorPalette(imgElement) {
+            const mainColors = colorThief.getPalette(imgElement, 10);
+            const mainHex = mainColors.map(c => (c[0] << 16) | (c[1] << 8) | c[2]);
+            const canvas = document.createElement('canvas');
+            canvas.width = imgElement.width;
+            canvas.height = imgElement.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(imgElement, 0, 0, imgElement.width, imgElement.height);
+            const imageData = ctx.getImageData(0, 0, imgElement.width, imgElement.height);
+            const data = imageData.data;
+            const sampleColors = [];
+            const sampleCount = 40;
+            for (let i = 0; i < sampleCount; i++) {
+                const x = Math.floor(Math.random() * imgElement.width);
+                const y = Math.floor(Math.random() * imgElement.height);
+                const idx = (y * imgElement.width + x) * 4;
+                const r = data[idx];
+                const g = data[idx+1];
+                const b = data[idx+2];
+                const hex = (r << 16) | (g << 8) | b;
+                sampleColors.push(hex);
+            }
+            const allColors = [...mainHex, ...sampleColors];
+            const uniqueColors = [];
+            const seen = new Set();
+            for (let col of allColors) {
+                if (!seen.has(col)) {
+                    seen.add(col);
+                    uniqueColors.push(col);
+                    if (uniqueColors.length >= 30) break;
+                }
+            }
+            return uniqueColors;
+        }
+        
+        function extractAndApply(imageFile, callback) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = async () => {
+                    const colorPool = await getRichColorPalette(img);
+                    const hexColors = colorPool.slice(0, 8);
+                    currentPalette = hexColors;
+                    applyColorsToAllMaterials(hexColors);
+                    setPhotoBackground(e.target.result);
+                    currentMakerImageBase64 = e.target.result;
+                    
+                    const starColorHexStrings = colorPool.map(c => '#' + c.toString(16).padStart(6,'0'));
+                    generateStars(starColorHexStrings);
+                    
+                    if (callback) callback(hexColors);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(imageFile);
+        }
+        
+        function exportGift() {
+            if (!currentMakerImageBase64 || !currentPalette) { alert("请先上传照片"); return; }
+            const message = makerMessage.value || "愿你每一天都甜甜蜜蜜！";
+            const partColors = {};
+            for (let [name, mats] of materialMap.entries()) {
+                if (mats.length && mats[0].color) partColors[name] = mats[0].color.getHex();
+            }
+            const envColor = envColorPicker ? envColorPicker.value : '#ffaa88';
+            const giftData = {
+                type: "cake_gift",
+                photoBase64: currentMakerImageBase64,
+                paletteColors: currentPalette,
+                message: message,
+                partColors: partColors,
+                envColor: envColor
+            };
+            const blob = new Blob([JSON.stringify(giftData)], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cake_gift.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            alert("礼物已导出！");
+        }
+        
+        function importGiftFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const gift = JSON.parse(e.target.result);
+                        importedGift = gift;
+                        giftMessage = gift.message || "愿你每一天都甜甜蜜蜜！";
+                        resolve(gift);
+                    } catch(err) { reject(err); }
+                };
+                reader.readAsText(file);
+            });
+        }
+        
+        function applyGiftToView(gift) {
+            if (gift.partColors) {
+                for (let [name, hex] of Object.entries(gift.partColors)) {
+                    const mats = materialMap.get(name);
+                    if (mats) mats.forEach(mat => { if (mat && mat.color) mat.color.setHex(hex); });
+                }
+            } else if (gift.paletteColors) {
+                applyColorsToAllMaterials(gift.paletteColors);
+            }
+            if (gift.photoBase64) setPhotoBackground(gift.photoBase64);
+            if (gift.envColor && envColorPicker) {
+                envColorPicker.value = gift.envColor;
+                updateEnvironmentColor(gift.envColor);
+            }
+        }
+        
+        // ---------- 烘焙问答 ----------
+        function getTextureDesc(answer) {
+            if (answer === 'bright') {
+                return `这块蛋糕的质地绵密得像被阳光晒暖的云朵，入口还带着丝丝温度。勺子切下去的瞬间几乎没有阻力，送进嘴里立刻融化，柔软地铺满整个上颚与舌面，像拥抱，也像一个慵懒午后不愿醒来的梦。每一口都扎实又轻盈，仿佛能把人托起来。`;
+            } else if (answer === 'calm') {
+                return `这块蛋糕的口感沙沙的，像细密的绿豆糕，又像退潮后海边的湿沙在指缝间缓缓流下。它不追求入口即化，而是让细小的颗粒在舌尖轻轻摩挲，温柔而不张扬，带着一种让人安心的踏实感。咀嚼时能听见极其细微的“沙沙”声，就像深夜翻书页的安宁。`;
+            } else {
+                return `这块蛋糕的质地偏硬，带着令人愉悦的嚼劲与脆度。咬下去的第一口会碰到微微阻力，随即是“咔嚓”一声清脆的断裂——像刚出炉的黄油脆饼，或者扎实的焦糖挞底。它不是那种软弱的甜点，而是有骨架、有态度的，适合慢慢啃、细细品，每一口都能听到自信的回响。`;
+            }
+        }
+        
+        function getFlavorDesc(answer) {
+            if (answer === 'sugar') {
+                return `它的甜是白砂糖般的纯粹，不夹杂任何修饰，像童年里第一次从玻璃纸里剥出的水果硬糖，直接、明亮、带着微微的颗粒感。这种甜不会腻，反而让人觉得安心——它不需要海盐或柠檬来平衡，因为最单纯的快乐本身就是完整的。咽下去之后，嘴角会不自觉地上扬。`;
+            } else if (answer === 'salt') {
+                return `它的味道带着海盐的微咸，像海风刚舔过嘴唇的那一瞬，随后才是缓缓涌上来的回甘。咸味并不抢戏，反而像一位低音提琴手，把甜味衬托得更加深邃、悠长。你会在咽下去两秒后才突然尝到那缕温暖的甜，仿佛潮水退去后，沙滩上留下的细小贝壳在阳光下闪烁。`;
+            } else {
+                return `它的风味是青柠的清爽与微酸，像咬开一颗还挂着水珠的柠檬糖，瞬间从舌尖炸开一股明亮的电流。酸味不尖锐，而是活泼地跳动着，唤醒每一颗沉睡的味蕾。它让整个蛋糕变得轻盈起来，仿佛在闷热的午后猛地吸了一口冰凉的青柠汽水，连呼吸都变得干净利落。`;
+            }
+        }
+        
+        function getFillingDesc(answer) {
+            if (answer === 'light') {
+                return `切开蛋糕的瞬间，里面藏着新鲜水果夹心——可能是一粒粒跳跃的草莓丁、柔软的芒果块，或者橙子瓣在牙尖爆出的小小果汁。它们像轻快旋律里突然蹦出来的欢快乐句，让你在绵密的奶油或蛋糕体中间偶遇一口多汁的惊喜。水果的酸与主味型或甜或咸相互呼应，每一次咬到果粒都像踩中了一个快乐的音符。`;
+            } else if (answer === 'slow') {
+                return `中间包裹着黑巧克力脆珠，微苦而香脆，像舒缓旋律中低音提琴拉出的沉稳长音。脆珠咬下去的“咔嘣”声非常轻，却很有存在感——它在甜美的基调里悄悄增添一抹深邃的层次，不抢风头，却让整块蛋糕变得有故事。你会在咀嚼的间隙突然尝到一丝可可的苦，随即又被奶香或甜味包裹，像平静湖面下暗涌的暖流。`;
+            } else {
+                return `顶部或者夹层里撒满了咸香脆片——可能是焦糖饼干碎、太妃脆粒，或者烤得金黄的杏仁薄片。每咬一口，都会在齿间发出清脆的“咯吱”声，像有节奏感的鼓点，一下一下敲在耳膜上。咸味让甜变得更加立体，脆片与柔软的蛋糕体形成鲜明对比，让整块蛋糕吃起来像一首节奏分明、绝不拖泥带水的进行曲。`;
+            }
+        }
+        
+        function getOptionLabel(question, value) {
+            if (question === 1) return { bright:'明媚的', calm:'宁静的', fresh:'清新的' }[value];
+            if (question === 2) return { sugar:'白砂糖', salt:'海盐', lime:'青柠' }[value];
+            return { light:'轻快的旋律', slow:'舒缓的旋律', rhythmic:'有节奏感的律动' }[value];
+        }
+        
+        function buildTastingHTML() {
+            const feeling = getOptionLabel(1, q1Answer);
+            const taste = getOptionLabel(2, q2Answer);
+            const sound = getOptionLabel(3, q3Answer);
+            const textureDesc = getTextureDesc(q1Answer);
+            const flavorDesc = getFlavorDesc(q2Answer);
+            const fillingDesc = getFillingDesc(q3Answer);
+            return `
+                <div class="feeling-tag">✨ 这块蛋糕给你的感觉是：${feeling} + ${taste} + ${sound} ✨</div>
+                <div class="desc-block">
+                    <p>${textureDesc}</p>
+                    <p>${flavorDesc}</p>
+                    <p>${fillingDesc}</p>
+                </div>
+                <div class="message-large">💌 ${giftMessage}</div>
+            `;
+        }
+        
+        function addIngredient(emoji) {
+            const span = document.createElement('span');
+            span.textContent = emoji;
+            span.classList.add('drop-animation');
+            ingredientsContainer.appendChild(span);
+        }
+        function renderCurrentQuestion() {
+            if (currentStep === 1) {
+                questionContainer.innerHTML = `
+                    <div class="question-box">
+                        <p>📖 第一题：这张照片给你什么感觉？</p>
+                        <div class="option-row">
+                            <div class="option-btn" data-q1="bright">☀️ 明媚的</div>
+                            <div class="option-btn" data-q1="calm">🌙 宁静的</div>
+                            <div class="option-btn" data-q1="fresh">💧 清新的</div>
+                        </div>
+                    </div>
+                `;
+                document.querySelectorAll('[data-q1]').forEach(btn => {
+                    btn.onclick = () => {
+                        if (q1Answer) return;
+                        q1Answer = btn.dataset.q1;
+                        document.querySelectorAll('[data-q1]').forEach(b => b.classList.remove('selected'));
+                        btn.classList.add('selected');
+                        if (q1Answer === 'bright') addIngredient('🍓');
+                        else if (q1Answer === 'calm') addIngredient('🍌');
+                        else addIngredient('🍋');
+                        setTimeout(() => { currentStep = 2; renderCurrentQuestion(); }, 800);
+                    };
+                });
+            } else if (currentStep === 2) {
+                questionContainer.innerHTML = `
+                    <div class="question-box">
+                        <p>📖 第二题：这张照片接近什么味道？</p>
+                        <div class="option-row">
+                            <div class="option-btn" data-q2="sugar">🍬 白砂糖</div>
+                            <div class="option-btn" data-q2="salt">🧂 海盐</div>
+                            <div class="option-btn" data-q2="lime">🍋 青柠</div>
+                        </div>
+                    </div>
+                `;
+                document.querySelectorAll('[data-q2]').forEach(btn => {
+                    btn.onclick = () => {
+                        if (q2Answer) return;
+                        q2Answer = btn.dataset.q2;
+                        document.querySelectorAll('[data-q2]').forEach(b => b.classList.remove('selected'));
+                        btn.classList.add('selected');
+                        if (q2Answer === 'sugar') addIngredient('🍬');
+                        else if (q2Answer === 'salt') addIngredient('🧂');
+                        else addIngredient('🍋');
+                        setTimeout(() => { currentStep = 3; renderCurrentQuestion(); }, 800);
+                    };
+                });
+            } else if (currentStep === 3) {
+                questionContainer.innerHTML = `
+                    <div class="question-box">
+                        <p>📖 第三题：这张照片听起来像什么？</p>
+                        <div class="option-row">
+                            <div class="option-btn" data-q3="light">🎵 轻快的旋律</div>
+                            <div class="option-btn" data-q3="slow">🎻 舒缓的旋律</div>
+                            <div class="option-btn" data-q3="rhythmic">🥁 有节奏感的律动</div>
+                        </div>
+                    </div>
+                `;
+                document.querySelectorAll('[data-q3]').forEach(btn => {
+                    btn.onclick = () => {
+                        if (q3Answer) return;
+                        q3Answer = btn.dataset.q3;
+                        document.querySelectorAll('[data-q3]').forEach(b => b.classList.remove('selected'));
+                        btn.classList.add('selected');
+                        if (q3Answer === 'light') addIngredient('🥚');
+                        else if (q3Answer === 'slow') addIngredient('🍫');
+                        else addIngredient('🌰');
+                        setTimeout(() => { ovenBtn.classList.add('active'); }, 800);
+                    };
+                });
+            }
+        }
+        
+        function showTastingFullscreen() {
+            if (!currentFullDescHTML) currentFullDescHTML = buildTastingHTML();
+            tastingDynamicContent.innerHTML = currentFullDescHTML;
+            tastingFullscreen.classList.remove('hidden');
+        }
+        
+        // 修改放入烤箱逻辑：先显示全黑长按界面
+        function handleOvenClick() {
+            if (ovenBtn.classList.contains('active') && q1Answer && q2Answer && q3Answer) {
+                if (importedGift) applyGiftToView(importedGift);
+                bakingScreen.classList.add('hidden');
+                // 显示长按点亮蜡烛界面
+                candleLightScreen.classList.remove('hidden');
+            } else {
+                alert("请先完成所有三个问题！");
+            }
+        }
+        
+        ovenBtn.onclick = handleOvenClick;
+        
+        // 长按点亮蜡烛逻辑
+        let pressTimer = null;
+        const longPressDuration = 800; // 毫秒
+        
+        function onPressStart(e) {
+            e.preventDefault();
+            pressTimer = setTimeout(() => {
+                // 长按触发：隐藏黑色面板，显示品鉴界面
+                candleLightScreen.classList.add('hidden');
+                showTastingFullscreen();
+                pressTimer = null;
+            }, longPressDuration);
+        }
+        
+        function onPressEnd(e) {
+            if (pressTimer) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+        }
+        
+        // 监听鼠标和触摸事件
+        candleLightScreen.addEventListener('mousedown', onPressStart);
+        candleLightScreen.addEventListener('mouseup', onPressEnd);
+        candleLightScreen.addEventListener('touchstart', onPressStart);
+        candleLightScreen.addEventListener('touchend', onPressEnd);
+        // 防止在长按过程中离开元素
+        candleLightScreen.addEventListener('mouseleave', onPressEnd);
+        
+        closeTastingBtn.onclick = () => {
+            tastingFullscreen.classList.add('hidden');
+            viewIntroBtn.style.display = 'block';
+        };
+        viewIntroBtn.onclick = () => {
+            if (currentFullDescHTML) {
+                tastingDynamicContent.innerHTML = currentFullDescHTML;
+                tastingFullscreen.classList.remove('hidden');
+            } else showTastingFullscreen();
+        };
+        
+        // 收到礼物流程
+        let receivedGiftFile = null;
+        receiveGiftInput.onchange = (e) => {
+            receivedGiftFile = e.target.files[0];
+            receiveNextBtn.disabled = !receivedGiftFile;
+        };
+        receiveNextBtn.onclick = async () => {
+            if (!receivedGiftFile) return;
+            try {
+                const gift = await importGiftFile(receivedGiftFile);
+                if (gift.photoBase64) {
+                    bakingPhoto.src = gift.photoBase64;
+                    bakingPhoto.style.display = 'block';
+                }
+                q1Answer = q2Answer = q3Answer = null;
+                currentStep = 1;
+                ingredientsContainer.innerHTML = '';
+                ovenBtn.classList.remove('active');
+                receiveImportScreen.classList.add('hidden');
+                bakingScreen.classList.remove('hidden');
+                renderCurrentQuestion();
+            } catch(err) { alert("文件无效"); }
+        };
+        
+        // 送出礼物流程
+        document.getElementById('sendBtn').onclick = () => {
+            choiceScreen.classList.add('hidden');
+            sendUploadScreen.classList.remove('hidden');
+        };
+        document.getElementById('receiveBtn').onclick = () => {
+            choiceScreen.classList.add('hidden');
+            receiveImportScreen.classList.remove('hidden');
+        };
+        
+        let uploadedFile = null;
+        sendPhotoInput.onchange = (e) => {
+            uploadedFile = e.target.files[0];
+            sendNextBtn.disabled = !uploadedFile;
+        };
+        sendNextBtn.onclick = () => {
+            if (!uploadedFile) return;
+            extractAndApply(uploadedFile, (colors) => {
+                const container = document.getElementById('colorPalette');
+                container.innerHTML = '';
+                colors.forEach(c => {
+                    const chip = document.createElement('div');
+                    chip.className = 'color-chip';
+                    chip.style.backgroundColor = `#${c.toString(16).padStart(6,'0')}`;
+                    container.appendChild(chip);
+                });
+                const previewImg = document.createElement('img');
+                previewImg.id = 'previewImg';
+                previewImg.className = 'photo-preview';
+                previewImg.src = currentMakerImageBase64;
+                const wrapper = document.getElementById('photoWrapper');
+                if (!wrapper) {
+                    const newWrapper = document.createElement('div');
+                    newWrapper.id = 'photoWrapper';
+                    document.querySelector('#cakeMakerPanel .panel-content').insertBefore(newWrapper, document.getElementById('colorPalette').parentNode.nextSibling);
+                    newWrapper.appendChild(previewImg);
+                } else {
+                    wrapper.innerHTML = '';
+                    wrapper.appendChild(previewImg);
+                }
+                sendUploadScreen.classList.add('hidden');
+                cakeMakerPanel.style.display = 'block';
+                setupMakerUI();
+            });
+        };
+        exportGiftBtn.onclick = exportGift;
+        
+        // 手动模式UI
+        let isCustomMode = false;
+        let pickActive = false;
+        let currentPickHandler = null;
+        
+        function enablePickMode() {
+            if (!currentMakerImageBase64) { alert("请先上传照片"); return; }
+            pickActive = true;
+            const previewImg = document.getElementById('previewImg');
+            if (!previewImg) return;
+            previewImg.style.cursor = 'crosshair';
+            const getColor = (e) => {
+                if (!pickActive) return;
+                const img = new Image();
+                img.src = currentMakerImageBase64;
+                img.onload = () => {
+                    const rect = previewImg.getBoundingClientRect();
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const scaleX = img.width / rect.width;
+                    const scaleY = img.height / rect.height;
+                    const x = (e.clientX - rect.left) * scaleX;
+                    const y = (e.clientY - rect.top) * scaleY;
+                    if (x>=0 && x<img.width && y>=0 && y<img.height) {
+                        const pixel = ctx.getImageData(x, y, 1, 1).data;
+                        const hex = (pixel[0]<<16)|(pixel[1]<<8)|pixel[2];
+                        applyColorToSelectedPart(hex);
+                        const geom = new THREE.BufferGeometry();
+                        const pos = new Float32Array(30*3);
+                        for(let i=0;i<30;i++) {
+                            pos[i*3] = (Math.random()-0.5)*1.2;
+                            pos[i*3+1] = Math.random()*1.8+0.8;
+                            pos[i*3+2] = (Math.random()-0.5)*1.2;
+                        }
+                        geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+                        const partSys = new THREE.Points(geom, new THREE.PointsMaterial({ color: hex, size: 0.07 }));
+                        scene.add(partSys);
+                        setTimeout(() => scene.remove(partSys), 500);
+                    }
+                };
+            };
+            previewImg.addEventListener('click', getColor);
+            currentPickHandler = getColor;
+        }
+        
+        function disablePickMode() {
+            pickActive = false;
+            if (currentPickHandler) {
+                const preview = document.getElementById('previewImg');
+                if (preview) preview.removeEventListener('click', currentPickHandler);
+                currentPickHandler = null;
+            }
+        }
+        
+        function setupMakerUI() {
+            const autoBtn = document.getElementById('autoModeBtn');
+            const customBtn = document.getElementById('customModeBtn');
+            const partSelect = document.getElementById('partSelect');
+            autoBtn.onclick = () => {
+                if (isCustomMode) disablePickMode();
+                isCustomMode = false;
+                customBtn.classList.remove('active');
+                autoBtn.classList.add('active');
+                document.getElementById('customTool').style.display = 'none';
+                if (currentPalette) applyColorsToAllMaterials(currentPalette);
+            };
+            customBtn.onclick = () => {
+                isCustomMode = true;
+                autoBtn.classList.remove('active');
+                customBtn.classList.add('active');
+                document.getElementById('customTool').style.display = 'block';
+                if (partSelect) {
+                    partSelect.onchange = (e) => { currentSelectedPart = e.target.value; };
+                    currentSelectedPart = partSelect.value;
+                }
+                enablePickMode();
+            };
+            if (partSelect && partSelect.value) currentSelectedPart = partSelect.value;
+        }
+        
+        // ========== 自动上下轻微拉动视角 ==========
+        let userInteracting = false;
+        let autoFloatTimer = null;
+        let autoFloatEnabled = true;
+        let autoFloatTime = 0;
+        let originalCameraY = camera.position.y;
+        let originalTargetY = controls.target.y;
+        const floatAmplitude = 0.12;
+        const floatSpeed = 0.6;
+        
+        controls.addEventListener('start', () => {
+            userInteracting = true;
+            if (autoFloatTimer) clearTimeout(autoFloatTimer);
+        });
+        controls.addEventListener('end', () => {
+            originalCameraY = camera.position.y;
+            originalTargetY = controls.target.y;
+            autoFloatTime = 0;
+            autoFloatTimer = setTimeout(() => {
+                userInteracting = false;
+            }, 3000);
+        });
+        
+        let lastTime = performance.now();
+        function updateAutoFloat(deltaTime) {
+            if (!autoFloatEnabled) return;
+            if (userInteracting) return;
+            if (!modelGroup) return;
+            autoFloatTime += deltaTime;
+            const offset = Math.sin(autoFloatTime * floatSpeed) * floatAmplitude;
+            camera.position.y = originalCameraY + offset;
+            controls.target.y = originalTargetY + offset;
+        }
+        
+        function animate() {
+            const now = performance.now();
+            let delta = Math.min(0.033, (now - lastTime) / 1000);
+            lastTime = now;
+            updateAutoFloat(delta);
+            controls.update();
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        animate();
+        
+        let animTime = 0;
+        function starAndParticleAnim() {
+            requestAnimationFrame(starAndParticleAnim);
+            animTime += 0.016;
+            currentStars.forEach(star => {
+                if (star.sprite) {
+                    star.angle += star.speed;
+                    star.sprite.position.x = Math.cos(star.angle) * star.radius;
+                    star.sprite.position.z = Math.sin(star.angle) * star.radius;
+                }
+            });
+            if (particleSystem) particleSystem.rotation.y = animTime * 0.08;
+        }
+        starAndParticleAnim();
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        generateStars(['#ffaa88', '#ffcc99', '#ffddbb', '#ffb347', '#ff8c42']);
+        updateEnvironmentColor('#ffaa88');
+    </script>
+</body>
+</html>
