@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>心意蛋糕工坊 · 模型加载提示强化版</title>
+    <title>心意蛋糕工坊 · 精准加载提示</title>
     <style>
         * {
             margin: 0;
@@ -532,8 +532,8 @@
     <!-- 看简介按钮 -->
     <button id="viewIntroBtn" class="view-intro-btn" style="display: none;">📖 看简介</button>
 
-    <!-- 模型加载提示 -->
-    <div id="modelLoadingHint" class="loading-hint">🎂 模型加载中，请稍后...</div>
+    <!-- 模型加载提示（初始隐藏） -->
+    <div id="modelLoadingHint" class="loading-hint" style="display: none;">🎂 模型加载中，请稍后...</div>
 
     <script type="importmap">
         {
@@ -597,13 +597,15 @@
             }
         }
         
-        // 显示或隐藏加载提示（根据模型是否加载完成）
-        function updateLoadingHintVisibility() {
+        // 显示或隐藏加载提示（手动控制）
+        function showLoadingHint() {
             if (!isModelLoaded) {
                 modelLoadingHint.style.display = 'flex';
-            } else {
-                modelLoadingHint.style.display = 'none';
             }
+        }
+        
+        function hideLoadingHint() {
+            modelLoadingHint.style.display = 'none';
         }
         
         // 面板折叠逻辑
@@ -843,8 +845,7 @@
         };
         
         const loader = new GLTFLoader();
-        // 显示加载提示
-        modelLoadingHint.style.display = 'flex';
+        // 初始不显示加载提示，只在特定场景手动调用 showLoadingHint
         loader.load('model.glb', 
             (gltf) => {
                 modelGroup = gltf.scene;
@@ -900,7 +901,8 @@
                 
                 // 标记模型已加载
                 isModelLoaded = true;
-                modelLoadingHint.style.display = 'none';
+                // 隐藏加载提示（如果还在显示）
+                hideLoadingHint();
                 // 执行所有等待回调
                 onModelLoadCallbacks.forEach(cb => cb());
                 onModelLoadCallbacks = [];
@@ -909,9 +911,9 @@
             (error) => {
                 console.error(error);
                 document.getElementById('info').innerHTML = '❌ 模型加载失败，请确保 model.glb 存在并使用本地服务器';
-                // 加载失败也隐藏提示，避免一直显示
-                isModelLoaded = true; // 设为 true 避免无限等待
-                modelLoadingHint.style.display = 'none';
+                // 加载失败也标记为已加载（避免永久等待），并隐藏提示
+                isModelLoaded = true;
+                hideLoadingHint();
                 onModelLoadCallbacks.forEach(cb => cb());
                 onModelLoadCallbacks = [];
             }
@@ -1237,16 +1239,7 @@
             pressTimer = setTimeout(() => {
                 candleLightScreen.classList.add('hidden');
                 showTastingFullscreen();
-                // 点亮蜡烛后，如果模型未加载完成，显示提示，并在加载完成后自动隐藏
-                if (!isModelLoaded) {
-                    modelLoadingHint.style.display = 'flex';
-                    // 注册回调，加载完成后隐藏
-                    onModelLoaded(() => {
-                        modelLoadingHint.style.display = 'none';
-                    });
-                } else {
-                    modelLoadingHint.style.display = 'none';
-                }
+                // 长按点亮后，关闭品鉴页时会显示加载提示，此处不主动显示
                 pressTimer = null;
             }, longPressDuration);
         }
@@ -1264,20 +1257,22 @@
         candleLightScreen.addEventListener('touchend', onPressEnd);
         candleLightScreen.addEventListener('mouseleave', onPressEnd);
         
-        // 关闭品鉴页后，确保蛋糕展示时模型加载提示正确显示
+        // 关闭品鉴页后，进入蛋糕展示界面 -> 显示加载提示（如果模型未加载完成）
         closeTastingBtn.onclick = () => {
             tastingFullscreen.classList.add('hidden');
             viewIntroBtn.style.display = 'block';
-            // 如果模型未加载完成，显示提示
+            // 场景2：关闭简介后的蛋糕展示界面，如果模型未加载完成，显示提示
             if (!isModelLoaded) {
-                modelLoadingHint.style.display = 'flex';
+                showLoadingHint();
+                // 注册回调，加载完成后隐藏
                 onModelLoaded(() => {
-                    modelLoadingHint.style.display = 'none';
+                    hideLoadingHint();
                 });
             } else {
-                modelLoadingHint.style.display = 'none';
+                hideLoadingHint();
             }
         };
+        
         viewIntroBtn.onclick = () => {
             if (currentFullDescHTML) {
                 tastingDynamicContent.innerHTML = currentFullDescHTML;
@@ -1349,14 +1344,14 @@
                 }
                 sendUploadScreen.classList.add('hidden');
                 cakeMakerPanel.style.display = 'block';
-                // 进入制作蛋糕界面时，如果模型未加载完成，显示提示
+                // 场景1：制作蛋糕界面（上传完图片后），如果模型未加载完成，显示提示
                 if (!isModelLoaded) {
-                    modelLoadingHint.style.display = 'flex';
+                    showLoadingHint();
                     onModelLoaded(() => {
-                        modelLoadingHint.style.display = 'none';
+                        hideLoadingHint();
                     });
                 } else {
-                    modelLoadingHint.style.display = 'none';
+                    hideLoadingHint();
                 }
                 setupMakerUI();
             });
@@ -1514,15 +1509,8 @@
         generateStars(['#ffaa88', '#ffcc99', '#ffddbb', '#ffb347', '#ff8c42']);
         updateEnvironmentColor('#ffaa88');
         
-        // 初始时如果模型未加载完成，显示提示（页面加载时已经显示）
-        if (!isModelLoaded) {
-            modelLoadingHint.style.display = 'flex';
-            onModelLoaded(() => {
-                modelLoadingHint.style.display = 'none';
-            });
-        } else {
-            modelLoadingHint.style.display = 'none';
-        }
+        // 初始时隐藏加载提示，不在页面打开时显示
+        hideLoadingHint();
     </script>
 </body>
 </html>
