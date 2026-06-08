@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>心意蛋糕工坊 · 可折叠控制面板</title>
+    <title>心意蛋糕工坊 · 引导语优化版</title>
     <style>
         * {
             margin: 0;
@@ -200,6 +200,17 @@
             color: #b45f1b;
             text-align: center;
         }
+        .guide-text {
+            font-size: 0.85rem;
+            color: #b45f1b;
+            background: #fef5e0;
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 30px;
+            margin-top: 12px;
+            border: 1px solid #e0c8a0;
+            font-family: 'Patrick Hand', cursive;
+        }
         .view-intro-btn {
             position: fixed;
             bottom: 30px;
@@ -215,7 +226,6 @@
             z-index: 20;
         }
         
-        /* 可折叠面板样式 */
         .ui-panel {
             position: absolute;
             top: 20px;
@@ -273,10 +283,6 @@
         .collapsed .collapse-btn {
             margin: 0;
             font-size: 1.6rem;
-        }
-        /* 折叠后显示一个简短的提示 */
-        .collapsed .panel-header {
-            margin-bottom: 0;
         }
         .collapsed .collapse-btn::before {
             content: "⚙️";
@@ -395,8 +401,8 @@
         </div>
     </div>
 
-    <!-- 蛋糕制作主界面（3D + 控制面板） - 可折叠 -->
-    <div id="cakeMakerPanel" class="ui-panel expanded">
+    <!-- 蛋糕制作主界面（3D + 控制面板） - 仅制作者可见 -->
+    <div id="cakeMakerPanel" class="ui-panel expanded" style="display: none;">
         <div class="panel-header">
             <button id="collapsePanelBtn" class="collapse-btn"><span>折叠面板</span></button>
         </div>
@@ -426,6 +432,7 @@
     <div id="receiveImportScreen" class="fullscreen-panel hidden">
         <div class="card">
             <h2>📂 导入礼物文件</h2>
+            <div class="guide-text" style="margin-bottom: 12px;">📌 提示：上传收到的 <strong>.json</strong> 格式礼物文件</div>
             <input type="file" id="receiveGiftInput" accept=".json">
             <button id="receiveNextBtn" disabled>🍰 开始制作蛋糕 →</button>
         </div>
@@ -435,6 +442,7 @@
     <div id="bakingScreen" class="fullscreen-panel hidden">
         <div class="kitchen-scene">
             <h2 style="font-size: 1.8rem;">🧑‍🍳 亲手制作蛋糕</h2>
+            <div class="guide-text" style="margin-bottom: 10px;">📌 提示：完成三道烹饪工序后选择【放入烤箱】</div>
             <img id="bakingPhoto" class="photo-preview-small" style="display: none;">
             <div class="bowl-area">
                 <div class="bowl">
@@ -460,6 +468,7 @@
         <div class="tasting-card-full">
             <button class="close-tasting" id="closeTastingBtn">✕</button>
             <div id="tastingDynamicContent"></div>
+            <div class="guide-text" style="margin-top: 20px;">📌 阅读完即可关闭简介，尽情欣赏蛋糕</div>
         </div>
     </div>
 
@@ -533,9 +542,8 @@
             e.stopPropagation();
             togglePanel();
         });
-        // 点击折叠后的面板也可以展开
         cakeMakerPanel.addEventListener('click', (e) => {
-            if (isPanelCollapsed && e.target === cakeMakerPanel || e.target.classList.contains('collapse-btn')) {
+            if (isPanelCollapsed && (e.target === cakeMakerPanel || e.target.classList.contains('collapse-btn'))) {
                 togglePanel();
             }
         });
