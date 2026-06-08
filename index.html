@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>心意蛋糕工坊 · 模型加载提示</title>
+    <title>心意蛋糕工坊 · 可滚动界面</title>
     <style>
         * {
             margin: 0;
@@ -77,6 +77,7 @@
         }
         .hidden { visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }
         
+        /* 烘焙问答界面容器 - 增加滚动 */
         .kitchen-scene {
             background: #fff9ef;
             border: 4px solid #2d2d2d;
@@ -86,7 +87,20 @@
             width: 90%;
             text-align: center;
             box-shadow: 12px 12px 0px 0px #2d2d2d;
+            max-height: 85vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
         }
+        .kitchen-scene::-webkit-scrollbar {
+            width: 6px;
+            background: #e0c8a0;
+            border-radius: 10px;
+        }
+        .kitchen-scene::-webkit-scrollbar-thumb {
+            background: #b45f1b;
+            border-radius: 10px;
+        }
+        
         .photo-preview-small {
             max-width: 200px;
             max-height: 150px;
@@ -162,7 +176,8 @@
         }
         .drop-animation { animation: dropIn 0.3s ease-out forwards; }
         
-        .tasting-fullscreen { background: rgba(255, 250, 240, 0.96); backdrop-filter: blur(8px); }
+        /* 品鉴页容器 - 增加滚动 */
+        .tasting-fullscreen { background: rgba(255, 250, 240, 0.96); backdrop-filter: blur(8px); align-items: flex-start; padding-top: 10vh; }
         .tasting-card-full {
             max-width: 650px;
             width: 90%;
@@ -171,15 +186,28 @@
             border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
             padding: 40px 36px;
             position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+        .tasting-card-full::-webkit-scrollbar {
+            width: 6px;
+            background: #e0c8a0;
+            border-radius: 10px;
+        }
+        .tasting-card-full::-webkit-scrollbar-thumb {
+            background: #b45f1b;
+            border-radius: 10px;
         }
         .close-tasting {
-            position: absolute;
-            top: 16px;
-            right: 20px;
+            position: sticky;
+            top: 0;
+            float: right;
             background: none;
             border: none;
             font-size: 28px;
             cursor: pointer;
+            z-index: 1;
         }
         .feeling-tag {
             background: #fff0c8;
@@ -857,7 +885,6 @@
             (error) => {
                 console.error(error);
                 document.getElementById('info').innerHTML = '❌ 模型加载失败，请确保 model.glb 存在并使用本地服务器';
-                // 加载失败也隐藏提示，避免一直显示
                 if (modelLoadingHint) {
                     modelLoadingHint.style.display = 'none';
                 }
