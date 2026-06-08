@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>心意蛋糕工坊 · 可滚动界面</title>
+    <title>心意蛋糕工坊 · 模型加载提示强化版</title>
     <style>
         * {
             margin: 0;
@@ -584,6 +584,28 @@
         let currentStep = 1;
         let currentFullDescHTML = "";
         
+        // 模型加载状态标志
+        let isModelLoaded = false;
+        let onModelLoadCallbacks = [];
+        
+        // 注册模型加载完成回调
+        function onModelLoaded(callback) {
+            if (isModelLoaded) {
+                callback();
+            } else {
+                onModelLoadCallbacks.push(callback);
+            }
+        }
+        
+        // 显示或隐藏加载提示（根据模型是否加载完成）
+        function updateLoadingHintVisibility() {
+            if (!isModelLoaded) {
+                modelLoadingHint.style.display = 'flex';
+            } else {
+                modelLoadingHint.style.display = 'none';
+            }
+        }
+        
         // 面板折叠逻辑
         let isPanelCollapsed = false;
         function togglePanel() {
@@ -822,7 +844,7 @@
         
         const loader = new GLTFLoader();
         // 显示加载提示
-        if (modelLoadingHint) modelLoadingHint.style.display = 'flex';
+        modelLoadingHint.style.display = 'flex';
         loader.load('model.glb', 
             (gltf) => {
                 modelGroup = gltf.scene;
@@ -876,18 +898,22 @@
                 
                 document.getElementById('info').innerHTML = '✅ 模型加载成功，可切换手动模式选择部件上色';
                 
-                // 模型加载完成，隐藏加载提示
-                if (modelLoadingHint) {
-                    modelLoadingHint.style.display = 'none';
-                }
+                // 标记模型已加载
+                isModelLoaded = true;
+                modelLoadingHint.style.display = 'none';
+                // 执行所有等待回调
+                onModelLoadCallbacks.forEach(cb => cb());
+                onModelLoadCallbacks = [];
             },
             undefined,
             (error) => {
                 console.error(error);
                 document.getElementById('info').innerHTML = '❌ 模型加载失败，请确保 model.glb 存在并使用本地服务器';
-                if (modelLoadingHint) {
-                    modelLoadingHint.style.display = 'none';
-                }
+                // 加载失败也隐藏提示，避免一直显示
+                isModelLoaded = true; // 设为 true 避免无限等待
+                modelLoadingHint.style.display = 'none';
+                onModelLoadCallbacks.forEach(cb => cb());
+                onModelLoadCallbacks = [];
             }
         );
         
@@ -1211,6 +1237,16 @@
             pressTimer = setTimeout(() => {
                 candleLightScreen.classList.add('hidden');
                 showTastingFullscreen();
+                // 点亮蜡烛后，如果模型未加载完成，显示提示，并在加载完成后自动隐藏
+                if (!isModelLoaded) {
+                    modelLoadingHint.style.display = 'flex';
+                    // 注册回调，加载完成后隐藏
+                    onModelLoaded(() => {
+                        modelLoadingHint.style.display = 'none';
+                    });
+                } else {
+                    modelLoadingHint.style.display = 'none';
+                }
                 pressTimer = null;
             }, longPressDuration);
         }
@@ -1228,9 +1264,19 @@
         candleLightScreen.addEventListener('touchend', onPressEnd);
         candleLightScreen.addEventListener('mouseleave', onPressEnd);
         
+        // 关闭品鉴页后，确保蛋糕展示时模型加载提示正确显示
         closeTastingBtn.onclick = () => {
             tastingFullscreen.classList.add('hidden');
             viewIntroBtn.style.display = 'block';
+            // 如果模型未加载完成，显示提示
+            if (!isModelLoaded) {
+                modelLoadingHint.style.display = 'flex';
+                onModelLoaded(() => {
+                    modelLoadingHint.style.display = 'none';
+                });
+            } else {
+                modelLoadingHint.style.display = 'none';
+            }
         };
         viewIntroBtn.onclick = () => {
             if (currentFullDescHTML) {
@@ -1303,6 +1349,15 @@
                 }
                 sendUploadScreen.classList.add('hidden');
                 cakeMakerPanel.style.display = 'block';
+                // 进入制作蛋糕界面时，如果模型未加载完成，显示提示
+                if (!isModelLoaded) {
+                    modelLoadingHint.style.display = 'flex';
+                    onModelLoaded(() => {
+                        modelLoadingHint.style.display = 'none';
+                    });
+                } else {
+                    modelLoadingHint.style.display = 'none';
+                }
                 setupMakerUI();
             });
         };
@@ -1458,6 +1513,16 @@
         
         generateStars(['#ffaa88', '#ffcc99', '#ffddbb', '#ffb347', '#ff8c42']);
         updateEnvironmentColor('#ffaa88');
+        
+        // 初始时如果模型未加载完成，显示提示（页面加载时已经显示）
+        if (!isModelLoaded) {
+            modelLoadingHint.style.display = 'flex';
+            onModelLoaded(() => {
+                modelLoadingHint.style.display = 'none';
+            });
+        } else {
+            modelLoadingHint.style.display = 'none';
+        }
     </script>
 </body>
 </html>
